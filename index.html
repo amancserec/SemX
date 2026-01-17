@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>semX - Campus Delivery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4285f4;
+            --secondary: #34a853;
+            --accent: #ea4335;
+            --light: #f8f9fa;
+            --dark: #202124;
+            --gray: #5f6368;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: #f5f5f5; color: var(--dark); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        header { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 1rem 0; position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        .logo span { color: var(--accent); }
+        nav a { margin-left: 1.5rem; color: var(--gray); text-decoration: none; font-weight: 500; }
+        nav a:hover { color: var(--primary); }
+        #authBtn { background: var(--primary); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 24px; cursor: pointer; font-weight: 600; }
+        .hero { background: linear-gradient(135deg, #4285f4 0%, #34a853 100%); color: white; padding: 4rem 0; text-align: center; border-radius: 0 0 20px 20px; margin-bottom: 2rem; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; max-width: 700px; margin: 0 auto 2rem; }
+        .cta-button { background: white; color: var(--primary); padding: 1rem 2rem; border-radius: 30px; text-decoration: none; font-weight: 700; display: inline-block; }
+        .main-content { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 3rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        .card h2 { margin-bottom: 1rem; color: var(--dark); border-bottom: 2px solid var(--light); padding-bottom: 0.5rem; }
+        .toggle-switch { display: flex; align-items: center; justify-content: space-between; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--secondary); }
+        input:checked + .slider:before { transform: translateX(30px); }
+        .listing-item { border: 1px solid #eee; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .listing-info h3 { margin-bottom: 0.3rem; }
+        .listing-price { font-size: 1.5rem; font-weight: 700; color: var(--secondary); }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--secondary); color: white; }
+        .chat-window { height: 300px; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; overflow-y: auto; margin-bottom: 1rem; background: #fafafa; }
+        .message { margin-bottom: 0.8rem; }
+        .message.sent { text-align: right; }
+        .message-content { display: inline-block; padding: 0.8rem; border-radius: 18px; max-width: 70%; }
+        .received .message-content { background: white; border: 1px solid #ddd; }
+        .sent .message-content { background: var(--primary); color: white; }
+        .chat-input { display: flex; }
+        .chat-input input { flex: 1; padding: 0.8rem; border: 1px solid #ddd; border-radius: 24px 0 0 24px; }
+        .chat-input button { border-radius: 0 24px 24px 0; }
+        .google-integrations { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .integration-box { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px dashed #ddd; }
+        .integration-box i { font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; }
+        footer { background: var(--dark); color: white; padding: 2rem 0; text-align: center; margin-top: 3rem; }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; gap: 1rem; }
+            nav a { margin: 0 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">sem<span>X</span></div>
+            <nav>
+                <a href="#"><i class="fas fa-home"></i> Home</a>
+                <a href="#"><i class="fas fa-shopping-bag"></i> Listings</a>
+                <a href="#"><i class="fas fa-comments"></i> Chats</a>
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <button id="authBtn"><i class="fas fa-sign-in-alt"></i> Sign In with Google</button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Deliver & Earn on Campus</h1>
+            <p>Connect with fellow students to send and receive items quickly, securely, and affordably. Turn your free time into extra cash.</p>
+            <a href="#" class="cta-button">Start Delivering Now</a>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="main-content">
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-box-open"></i> Active Listings</h2>
+                    <div id="listingsContainer">
+                        <!-- Listings populated by JS -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-comment-dots"></i> Order Chat</h2>
+                    <div class="chat-window" id="chatWindow">
+                        <!-- Chat messages appear here -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Type a message...">
+                        <button class="btn btn-primary" id="sendBtn"><i class="fas fa-paper-plane"></i> Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-toggle-on"></i> Deliverer Mode</h2>
+                    <div class="toggle-switch">
+                        <span>Toggle your availability to accept delivery requests</span>
+                        <label class="switch">
+                            <input type="checkbox" id="availabilityToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p id="availabilityStatus" style="margin-top: 1rem; color: var(--gray);">You are currently <strong>offline</strong>.</p>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-tasks"></i> My Active Orders</h2>
+                    <div id="ordersContainer">
+                        <p>No active orders. When you request or accept a delivery, it will appear here.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-ad"></i> Campus Ads</h2>
+                    <div style="text-align: center; padding: 1rem; background: #f1f3f4; border-radius: 8px;">
+                        <!-- Google AdSense Placeholder -->
+                        <p><i class="fab fa-google" style="color: #34a853;"></i> Ad by Google</p>
+                        <p><strong>Student Discount: 50% off Textbooks</strong></p>
+                        <p>Limited time offer for verified students.</p>
+                        <button class="btn btn-success" style="margin-top: 0.5rem;">Learn More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 2rem;">Google Integrations</h2>
+        <div class="google-integrations">
+            <div class="integration-box">
+                <i class="fab fa-google"></i>
+                <h3>Google Forms</h3>
+                <p>Help us improve by filling out our feedback form.</p>
+                <button class="btn btn-primary" onclick="window.open('https://forms.google.com', '_blank')">Open Form</button>
+            </div>
+            <div class="integration-box">
+                <i class="fas fa-ad"></i>
+                <h3>Google AdSense</h3>
+                <p>Relevant ads help keep semX free for students.</p>
+                <button class="btn btn-primary" onclick="alert('AdSense integration would be implemented in production.')">Learn More</button>
+            </div>
+            <div class="integration-box">
+                <i class="fas fa-gift"></i>
+                <h3>Google Opinion Rewards</h3>
+                <p>Earn credit for semX by answering quick surveys.</p>
+                <button class="btn btn-primary" onclick="window.open('https://play.google.com/store/apps/details?id=com.google.android.apps.paidtasks', '_blank')">Get the App</button>
+            </div>
+            <div class="integration-box">
+                <i class="fas fa-tasks"></i>
+                <h3>Google TaskMate</h3>
+                <p>Complete micro-tasks to earn extra money.</p>
+                <button class="btn btn-primary" onclick="window.open('https://play.google.com/store/apps/details?id=com.google.android.apps.taskmate', '_blank')">Explore Tasks</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 semX Campus Delivery. All rights reserved.</p>
+            <p>This is a prototype. In a full implementation, all features would be functional and backed by the described architecture.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ====================
+        // MOCK DATA & STATE
+        // ====================
+        const mockListings = [
+            { id: 1, title: "Physics Textbook", description: "Like new, 5th edition.", price: 45, category: "Books", user: "Alex" },
+            { id: 2, title: "Coffee from Starbucks", description: "Large latte, need pickup from campus cafe.", price: 190 category: "Food", user: "Taylor" },
+            { id: 3, title: "Phone Charger", description: "USB-C, left in library.", price: 300, category: "Electronics", user: "Jordan" },
+            { id: 4, title: "Laundry Detergent", description: "Full bottle, deliver to dorm.", price: 80, category: "Supplies", user: "Casey" }
+        ];
+        const mockChat = [
+            { sender: "Alex", text: "Is the textbook still available?", sent: false },
+            { sender: "You", text: "Yes, I can deliver it in 30 min.", sent: true },
+            { sender: "Alex", text: "Perfect! I'll request the order.", sent: false }
+        ];
+        let isAvailable = false;
+        let isAuthenticated = false;
+
+        // ====================
+        // DOM ELEMENTS
+        // ====================
+        const authBtn = document.getElementById('authBtn');
+        const availabilityToggle = document.getElementById('availabilityToggle');
+        const availabilityStatus = document.getElementById('availabilityStatus');
+        const listingsContainer = document.getElementById('listingsContainer');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const ordersContainer = document.getElementById('ordersContainer');
+
+        // ====================
+        // INITIAL RENDER
+        // ====================
+        function renderListings() {
+            listingsContainer.innerHTML = '';
+            mockListings.forEach(listing => {
+                const listingEl = document.createElement('div');
+                listingEl.className = 'listing-item';
+                listingEl.innerHTML = `
+                    <div class="listing-info">
+                        <h3>${listing.title}</h3>
+                        <p>${listing.description}</p>
+                        <p><small><i class="fas fa-user"></i> ${listing.user} • <i class="fas fa-tag"></i> ${listing.category}</small></p>
+                    </div>
+                    <div>
+                        <div class="listing-price">₹${listing.price}</div>
+                        <button class="btn btn-primary request-btn" data-id="${listing.id}">Request Delivery</button>
+                    </div>
+                `;
+                listingsContainer.appendChild(listingEl);
+            });
+            // Add event listeners to request buttons
+            document.querySelectorAll('.request-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    alert(`Order requested for listing #${id}. In a real app, this would create an order and open a chat.`);
+                });
+            });
+        }
+
+        function renderChat() {
+            chatWindow.innerHTML = '';
+            mockChat.forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.className = `message ${msg.sent ? 'sent' : 'received'}`;
+                msgEl.innerHTML = `
+                    <div class="message-content">
+                        <strong>${msg.sender}:</strong> ${msg.text}
+                    </div>
+                `;
+                chatWindow.appendChild(msgEl);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function updateAvailabilityUI() {
+            availabilityToggle.checked = isAvailable;
+            availabilityStatus.innerHTML = `You are currently <strong>${isAvailable ? 'online' : 'offline'}</strong>.`;
+            availabilityStatus.style.color = isAvailable ? 'var(--secondary)' : 'var(--gray)';
+        }
+
+        // ====================
+        // EVENT HANDLERS
+        // ====================
+        authBtn.addEventListener('click', function() {
+            if (!isAuthenticated) {
+                // Simulate Google Sign-In
+                isAuthenticated = true;
+                authBtn.innerHTML = '<i class="fas fa-user"></i> My Profile';
+                alert('Simulated Google Sign-In successful. In production, this would use Firebase Authentication.');
+            } else {
+                // Already signed in
+                window.location.href = '#profile';
+            }
+        });
+
+        availabilityToggle.addEventListener('change', function() {
+            isAvailable = this.checked;
+            updateAvailabilityUI();
+            alert(`Availability set to ${isAvailable ? 'ONLINE. You can now receive delivery requests.' : 'OFFLINE.'}`);
+        });
+
+        sendBtn.addEventListener('click', function() {
+            const text = chatInput.value.trim();
+            if (text) {
+                const msgEl = document.createElement('div');
+                msgEl.className = 'message sent';
+                msgEl.innerHTML = `<div class="message-content"><strong>You:</strong> ${text}</div>`;
+                chatWindow.appendChild(msgEl);
+                chatInput.value = '';
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                // Simulate a reply after 1 second
+                setTimeout(() => {
+                    const replyEl = document.createElement('div');
+                    replyEl.className = 'message received';
+                    replyEl.innerHTML = `<div class="message-content"><strong>Alex:</strong> Thanks for the update!</div>`;
+                    chatWindow.appendChild(replyEl);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }, 1000);
+            }
+        });
+
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+
+        // ====================
+        // INITIALIZE
+        // ====================
+        renderListings();
+        renderChat();
+        updateAvailabilityUI();
+    </script>
+</body>
+</html>
