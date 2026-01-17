@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": "user1",
+      "name": "Test User",
+      "email": "test@example.com",
+      "collegeEmail": "test@university.edu",
+      "password": "$2a$10$X1x7O6r7YVZq8VZq8VZq8O",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Test",
+      "rating": 4.8,
+      "isAvailable": false,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "listings": [
+    {
+      "id": "listing1",
+      "userId": "user1",
+      "title": "Coffee from Starbucks",
+      "description": "Need coffee delivered from Starbucks to library",
+      "category": "food",
+      "price": 8.5,
+      "pickupLocation": "Starbucks, Campus Center",
+      "deliveryLocation": "Main Library, 2nd floor",
+      "status": "active",
+      "createdAt": "2024-01-15T10:35:00.000Z"
+    },
+    {
+      "id": "listing2",
+      "userId": "user1",
+      "title": "Textbooks delivery",
+      "description": "Deliver textbooks from bookstore to dorm",
+      "category": "other",
+      "price": 12,
+      "pickupLocation": "Campus Bookstore",
+      "deliveryLocation": "Dorm Building A",
+      "status": "active",
+      "createdAt": "2024-01-15T10:40:00.000Z"
+    }
+  ],
+  "deliveries": [],
+  "messages": [],
+  "conversations": []
+}
