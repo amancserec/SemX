@@ -60,6 +60,30 @@
         .integration-box { background: white; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px dashed #ddd; }
         .integration-box i { font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; }
         footer { background: var(--dark); color: white; padding: 2rem 0; text-align: center; margin-top: 3rem; }
+        .filter-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .filter-tab { padding: 0.4rem 1rem; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: 500; font-size: 0.9rem; }
+        .filter-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .post-btn { background: var(--secondary); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 24px; cursor: pointer; font-weight: 600; margin-left: 1rem; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        .modal h2 { margin-bottom: 1.5rem; }
+        .modal .close-btn { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray); line-height: 1; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.7rem 1rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .order-item { border: 1px solid #eee; border-radius: 8px; padding: 0.8rem; margin-bottom: 0.8rem; }
+        .order-item .order-status { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; background: #e8f5e9; color: var(--secondary); }
+        .empty-state { text-align: center; padding: 1.5rem; color: var(--gray); }
+        .empty-state i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .listing-actions { text-align: right; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--light); padding-bottom: 0.5rem; }
+        .section-header h2 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; }
+        .order-details { font-size: 0.85rem; color: var(--gray); }
         @media (max-width: 768px) {
             .main-content { grid-template-columns: 1fr; }
             .header-content { flex-direction: column; gap: 1rem; }
@@ -85,15 +109,25 @@
         <div class="container">
             <h1>Deliver & Earn on Campus</h1>
             <p>Connect with fellow students to send and receive items quickly, securely, and affordably. Turn your free time into extra cash.</p>
-            <a href="#" class="cta-button">Start Delivering Now</a>
+            <a href="#listings" class="cta-button" id="ctaBtn">Start Delivering Now</a>
         </div>
     </section>
 
     <div class="container">
         <div class="main-content">
             <div>
-                <div class="card">
-                    <h2><i class="fas fa-box-open"></i> Active Listings</h2>
+                <div class="card" id="listings">
+                    <div class="section-header">
+                        <h2><i class="fas fa-box-open"></i> Active Listings</h2>
+                        <button class="post-btn" id="postListingBtn"><i class="fas fa-plus"></i> Post a Listing</button>
+                    </div>
+                    <div class="filter-tabs" id="filterTabs">
+                        <button class="filter-tab active" data-cat="All">All</button>
+                        <button class="filter-tab" data-cat="Books">Books</button>
+                        <button class="filter-tab" data-cat="Food">Food</button>
+                        <button class="filter-tab" data-cat="Electronics">Electronics</button>
+                        <button class="filter-tab" data-cat="Supplies">Supplies</button>
+                    </div>
                     <div id="listingsContainer">
                         <!-- Listings populated by JS -->
                     </div>
@@ -127,7 +161,10 @@
                 <div class="card">
                     <h2><i class="fas fa-tasks"></i> My Active Orders</h2>
                     <div id="ordersContainer">
-                        <p>No active orders. When you request or accept a delivery, it will appear here.</p>
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No active orders. Request a delivery to get started.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -180,11 +217,48 @@
         </div>
     </footer>
 
+    <!-- Post a Listing Modal -->
+    <div class="modal-overlay" id="postModal">
+        <div class="modal">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <h2><i class="fas fa-plus-circle"></i> Post a Listing</h2>
+            <form id="postListingForm">
+                <div class="form-group">
+                    <label for="listingTitle">Item / Service Title</label>
+                    <input type="text" id="listingTitle" placeholder="e.g. Coffee from Starbucks" required>
+                </div>
+                <div class="form-group">
+                    <label for="listingDesc">Description</label>
+                    <textarea id="listingDesc" placeholder="Describe the item or delivery details..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="listingCategory">Category</label>
+                    <select id="listingCategory" required>
+                        <option value="">Select a category</option>
+                        <option value="Books">Books</option>
+                        <option value="Food">Food</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Supplies">Supplies</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="listingPrice">Delivery Fee (₹)</label>
+                    <input type="number" id="listingPrice" placeholder="e.g. 50" min="1" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success" style="flex:1;"><i class="fas fa-check"></i> Post Listing</button>
+                    <button type="button" class="btn btn-outline" id="cancelModal" style="flex:1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // ====================
         // MOCK DATA & STATE
         // ====================
-        const mockListings = [
+        let listings = [
             { id: 1, title: "Physics Textbook", description: "Like new, 5th edition.", price: 45, category: "Books", user: "Alex" },
             { id: 2, title: "Coffee from Starbucks", description: "Large latte, need pickup from campus cafe.", price: 180, category: "Food", user: "Taylor" },
             { id: 3, title: "Phone Charger", description: "USB-C, left in library.", price: 300, category: "Electronics", user: "Jordan" },
@@ -197,6 +271,9 @@
         ];
         let isAvailable = false;
         let isAuthenticated = false;
+        let activeOrders = [];
+        let nextId = listings.length + 1;
+        let currentFilter = 'All';
 
         // ====================
         // DOM ELEMENTS
@@ -209,33 +286,48 @@
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendBtn');
         const ordersContainer = document.getElementById('ordersContainer');
+        const postListingBtn = document.getElementById('postListingBtn');
+        const postModal = document.getElementById('postModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelModal = document.getElementById('cancelModal');
+        const postListingForm = document.getElementById('postListingForm');
+        const filterTabs = document.getElementById('filterTabs');
 
         // ====================
-        // INITIAL RENDER
+        // RENDER FUNCTIONS
         // ====================
         function renderListings() {
+            const filtered = currentFilter === 'All'
+                ? listings
+                : listings.filter(l => l.category === currentFilter);
             listingsContainer.innerHTML = '';
-            mockListings.forEach(listing => {
+            if (filtered.length === 0) {
+                listingsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>No listings in this category yet.</p></div>';
+                return;
+            }
+            filtered.forEach(listing => {
                 const listingEl = document.createElement('div');
                 listingEl.className = 'listing-item';
+                const alreadyOrdered = activeOrders.some(o => o.listingId === listing.id);
                 listingEl.innerHTML = `
                     <div class="listing-info">
                         <h3>${listing.title}</h3>
                         <p>${listing.description}</p>
                         <p><small><i class="fas fa-user"></i> ${listing.user} • <i class="fas fa-tag"></i> ${listing.category}</small></p>
                     </div>
-                    <div>
+                    <div class="listing-actions">
                         <div class="listing-price">₹${listing.price}</div>
-                        <button class="btn btn-primary request-btn" data-id="${listing.id}">Request Delivery</button>
+                        <button class="btn ${alreadyOrdered ? 'btn-success' : 'btn-primary'} request-btn" data-id="${listing.id}" ${alreadyOrdered ? 'disabled' : ''}>
+                            ${alreadyOrdered ? '<i class="fas fa-check"></i> Requested' : 'Request Delivery'}
+                        </button>
                     </div>
                 `;
                 listingsContainer.appendChild(listingEl);
             });
-            // Add event listeners to request buttons
             document.querySelectorAll('.request-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    alert(`Order requested for listing #${id}. In a real app, this would create an order and open a chat.`);
+                    const id = parseInt(this.getAttribute('data-id'));
+                    requestDelivery(id);
                 });
             });
         }
@@ -243,15 +335,15 @@
         function renderChat() {
             chatWindow.innerHTML = '';
             mockChat.forEach(msg => {
-                const msgEl = document.createElement('div');
-                msgEl.className = `message ${msg.sent ? 'sent' : 'received'}`;
-                msgEl.innerHTML = `
-                    <div class="message-content">
-                        <strong>${msg.sender}:</strong> ${msg.text}
-                    </div>
-                `;
-                chatWindow.appendChild(msgEl);
+                appendMessage(msg.sender, msg.text, msg.sent);
             });
+        }
+
+        function appendMessage(sender, text, sent) {
+            const msgEl = document.createElement('div');
+            msgEl.className = `message ${sent ? 'sent' : 'received'}`;
+            msgEl.innerHTML = `<div class="message-content"><strong>${sender}:</strong> ${text}</div>`;
+            chatWindow.appendChild(msgEl);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
@@ -261,49 +353,121 @@
             availabilityStatus.style.color = isAvailable ? 'var(--secondary)' : 'var(--gray)';
         }
 
+        function renderOrders() {
+            if (activeOrders.length === 0) {
+                ordersContainer.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No active orders. Request a delivery to get started.</p></div>';
+                return;
+            }
+            ordersContainer.innerHTML = '';
+            activeOrders.forEach(order => {
+                const orderEl = document.createElement('div');
+                orderEl.className = 'order-item';
+                orderEl.innerHTML = `
+                    <div class="order-header">
+                        <div>
+                            <strong>${order.title}</strong>
+                            <p class="order-details">Seller: ${order.seller} • ₹${order.price}</p>
+                        </div>
+                        <span class="order-status">Pending</span>
+                    </div>
+                `;
+                ordersContainer.appendChild(orderEl);
+            });
+        }
+
+        // ====================
+        // ACTIONS
+        // ====================
+        function requestDelivery(id) {
+            if (activeOrders.some(o => o.listingId === id)) return;
+            const listing = listings.find(l => l.id === id);
+            if (!listing) return;
+            activeOrders.push({
+                listingId: listing.id,
+                title: listing.title,
+                seller: listing.user,
+                price: listing.price
+            });
+            renderListings();
+            renderOrders();
+            appendMessage('System', `Order requested for "${listing.title}". Connecting you with ${listing.user}...`, false);
+        }
+
+        function openModal() {
+            postModal.classList.add('open');
+            document.getElementById('listingTitle').focus();
+        }
+
+        function closeModalFn() {
+            postModal.classList.remove('open');
+            postListingForm.reset();
+        }
+
         // ====================
         // EVENT HANDLERS
         // ====================
         authBtn.addEventListener('click', function() {
             if (!isAuthenticated) {
-                // Simulate Google Sign-In
                 isAuthenticated = true;
-                authBtn.innerHTML = '<i class="fas fa-user"></i> My Profile';
-                alert('Simulated Google Sign-In successful. In production, this would use Firebase Authentication.');
+                authBtn.innerHTML = '<i class="fas fa-user-check"></i> My Profile';
+                authBtn.style.background = 'var(--secondary)';
             } else {
-                // Already signed in
-                window.location.href = '#profile';
+                document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
             }
         });
 
         availabilityToggle.addEventListener('change', function() {
             isAvailable = this.checked;
             updateAvailabilityUI();
-            alert(`Availability set to ${isAvailable ? 'ONLINE. You can now receive delivery requests.' : 'OFFLINE.'}`);
         });
 
         sendBtn.addEventListener('click', function() {
             const text = chatInput.value.trim();
-            if (text) {
-                const msgEl = document.createElement('div');
-                msgEl.className = 'message sent';
-                msgEl.innerHTML = `<div class="message-content"><strong>You:</strong> ${text}</div>`;
-                chatWindow.appendChild(msgEl);
-                chatInput.value = '';
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-                // Simulate a reply after 1 second
-                setTimeout(() => {
-                    const replyEl = document.createElement('div');
-                    replyEl.className = 'message received';
-                    replyEl.innerHTML = `<div class="message-content"><strong>Alex:</strong> Thanks for the update!</div>`;
-                    chatWindow.appendChild(replyEl);
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }, 1000);
-            }
+            if (!text) return;
+            appendMessage('You', text, true);
+            chatInput.value = '';
+            setTimeout(() => {
+                appendMessage('Alex', 'Thanks for the update!', false);
+            }, 1000);
         });
 
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendBtn.click();
+        });
+
+        postListingBtn.addEventListener('click', openModal);
+        closeModal.addEventListener('click', closeModalFn);
+        cancelModal.addEventListener('click', closeModalFn);
+        postModal.addEventListener('click', function(e) {
+            if (e.target === postModal) closeModalFn();
+        });
+
+        postListingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('listingTitle').value.trim();
+            const description = document.getElementById('listingDesc').value.trim();
+            const category = document.getElementById('listingCategory').value;
+            const price = parseInt(document.getElementById('listingPrice').value);
+            const newListing = { id: nextId++, title, description, price, category, user: isAuthenticated ? 'Me' : 'Guest' };
+            listings.unshift(newListing);
+            currentFilter = 'All';
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === 'All'));
+            renderListings();
+            closeModalFn();
+        });
+
+        filterTabs.addEventListener('click', function(e) {
+            const tab = e.target.closest('.filter-tab');
+            if (!tab) return;
+            currentFilter = tab.dataset.cat;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderListings();
+        });
+
+        document.getElementById('ctaBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
         });
 
         // ====================
@@ -312,6 +476,7 @@
         renderListings();
         renderChat();
         updateAvailabilityUI();
+        renderOrders();
     </script>
 </body>
 </html>
